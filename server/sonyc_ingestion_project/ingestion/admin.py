@@ -1,4 +1,4 @@
 from django.contrib import admin
-from ingestion.models import Scan
+from ingestion.models import WifiScan
 
-admin.site.register(Scan)
+admin.site.register(WifiScan)

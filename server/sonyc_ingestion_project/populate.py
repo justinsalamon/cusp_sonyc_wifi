@@ -4,7 +4,13 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'sonyc_ingestion_project.setting
 import django
 django.setup()
 
-from ingestion.models import Scan
+try:
+    import pymysql
+    pymysql.install_as_MySQLdb()
+except ImportError:
+    pass
+
+from ingestion.models import WifiScan
 import simplejson as json
 def populate():
   f = open('b.txt', 'r')
@@ -17,7 +23,7 @@ def populate():
   #len(scan[mainkey])
   list_results = []
   for mainkey in scan:
-      for i in range(0, len(scan[mainkey])):
+      for i in range(0, 1):
           single = []
           for key in scan[mainkey][i]:
               if isinstance(scan[mainkey][i][key],list):
@@ -57,9 +63,9 @@ def populate():
                   #print str(tup2[0]) + ": " + str(tup2[1])
               final.append(subfinal)
           for ap in final:
-              list_results.append(Scan(**ap))
+              list_results.append(WifiScan(**ap))
 
-  Scan.objects.bulk_create(list_results)
+  WifiScan.objects.bulk_create(list_results)
 
 if __name__ == '__main__':
   print "starting ingestion!"

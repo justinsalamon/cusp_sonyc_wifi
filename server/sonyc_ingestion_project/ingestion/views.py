@@ -2,4 +2,5 @@ from django.shortcuts import render
 from django.http import HttpResponse
 
 def index(request):
-  return HttpResponse("ingestion says hello!")
+    return HttpResponse("ingestion says hello!")
+

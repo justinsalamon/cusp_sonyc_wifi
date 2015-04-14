@@ -11,4 +11,5 @@ urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
 #     url(r'^books/(?P<title>\w+)/$', 'books.views.index'),
     url(r'^books/$', 'books.views.index'),
+    url(r'^wifipulling/$', 'wifipulling.views.index'),
 ]

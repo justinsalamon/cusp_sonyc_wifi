@@ -10,6 +10,7 @@ def index(request):
         print request.body
         populate(request.body)
     # return HttpResponse("ingestion says hello!")
+    return HttpResponse("1")
 
 
 def populate(info):
@@ -66,4 +67,3 @@ def populate(info):
               list_results.append(WifiScan(**ap))
 
   WifiScan.objects.bulk_create(list_results)
-  return 1

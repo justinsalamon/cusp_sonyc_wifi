@@ -2,7 +2,7 @@ from django.shortcuts import render
 
 # Create your views here.
 from django.http import HttpResponse
-from wifipulling.models import WifiScan
+from ingestion.models import WifiScan
 import json
 import datetime
 def index(request):

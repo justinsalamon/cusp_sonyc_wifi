@@ -1,0 +1,88 @@
+<!doctype html>
+<html>
+    <head>
+
+        <title>GooglemapAPI_nyuwifimapping</title>
+    
+        <style>
+            html, body, #map-canvas { height: 80%; width :80%; margin: 50; padding: 0;}
+            body{
+                text-align: right;
+                font-family: arial;
+            }
+
+            .button{
+                margin:0px;
+
+                font-size:16px;
+                font-weight: bold;
+                padding:5px 10px;
+            }
+        </style>
+        <script type="text/javascript"src="https://maps.googleapis.com/maps/api/js?sensor = true">
+        </script>
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+        <div id="map-canvas"></div>
+
+        <script type="text/javascript">
+            function initialize() {
+                var myLatlng = { lat: 42.6972323, lng: -73.644};
+                var mapOptions = {
+                center: myLatlng,
+                zoom: 8
+                };
+                var map = new google.maps.Map(document.getElementById('map-canvas'),
+                    mapOptions);
+                var marker = new google.maps.Marker({
+                    position: myLatlng,
+                    map:map,
+                    title:"Hello World!"
+                });
+
+                }
+
+                google.maps.event.addDomListener(window, 'load', initialize);
+               
+        </script>
+         <script type ="text/javascript">
+
+        //When DOM loaded we attach click event to button
+            $(document).ready(function() {
+            
+            //after button is clicked we download the data
+                $('.button').click(function(){
+
+                //start ajax request
+                    $.ajax({
+                        url: "data.json",
+                    //force to handle it as text
+                        dataType: "text",
+                        success: function(data) {
+                        //data downloaded so we call parseJSON function 
+                        //and pass downloaded data
+                            var json = $.parseJSON(data);
+                        //now json variable contains data in json format
+                            json.forEach(function(obj){console.log(obj.idx);});
+                        //let's display a few items
+                    
+                            json.forEach(function(obj){
+                        
+                                $('#results').html('latitude: ' + obj.lat + '<br />longtitude: ' + obj.lng);
+                            });
+                        // $('#results').html('latitude: ' + json[991].lat + '<br />longtitude: ' + json[991].lng);
+                        }
+                    });
+             });
+            });
+        </script>
+    </head>
+    <body>
+        <a href="data.json" target="_blank">Open JSON file</a><br />
+        <input type="button" value="Get and parse JSON" class="button" />
+        <br />
+        <span id="results"></span>
+        <div style="height:100%; width: 100%; margin = 50 px"> 
+            <div id="map-canvas"></div>
+        </div>
+    </body>
+</html>

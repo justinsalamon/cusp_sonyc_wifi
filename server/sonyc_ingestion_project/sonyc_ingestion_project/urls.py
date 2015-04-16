@@ -8,4 +8,5 @@ urlpatterns = [
 
     url(r'^admin/', include(admin.site.urls)),
     url(r'^ingestion/', include('ingestion.urls')),
+    url(r'^wifipulling/', include('wifipulling.urls')),
 ]

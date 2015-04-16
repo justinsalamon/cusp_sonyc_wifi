@@ -22,4 +22,4 @@ class WifiScan(models.Model):
         db_table = 'wifi_scan'
 
     def __unicode__(self):
-        return self.ssid
+        return str(self.idx) + " / " + str(self.lat) + " / " + str(self.lng) + " / " + str(self.acc) + " / " + str(self.altitude) + " / " + str(self.time) + " / " + self.device_mac + " / " + self.app_version+ " / " + self.droid_version+ " / " + self.device_model+ " / " + self.ssid+ " / " + self.bssid+ " / " + self.caps+ " / " + str(self.level)+ " / " + str(self.freq)

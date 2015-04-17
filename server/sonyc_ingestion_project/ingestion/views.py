@@ -8,9 +8,13 @@ from django.views.decorators.csrf import csrf_exempt
 def index(request):
     if request.method == 'POST':
         print request.body
-        populate(request.body)
+        if (len(request.body) <= 0):
+            return HttpResponse("No Payload Received")
+        response = populate(request.body)
     # return HttpResponse("ingestion says hello!")
-    return HttpResponse("1")
+        return HttpResponse(response)
+    else:
+        return HttpResponse("Hello!")
 
 
 def populate(info):
@@ -19,11 +23,16 @@ def populate(info):
   #f.close()
   #scan = json.loads(f.read())
 
-  scan = json.loads(info)
+  try:
+    scan = json.loads(info)
+  except:
+    return "Invalid JSON"
 
   #len(scan[mainkey])
   list_results = []
   for mainkey in scan:
+      if (len(scan[mainkey]) < 1):
+          return "Empty JSON uploaded!!!"
       for i in range(0, len(scan[mainkey])):
           single = []
           for key in scan[mainkey][i]:
@@ -65,5 +74,8 @@ def populate(info):
               final.append(subfinal)
           for ap in final:
               list_results.append(WifiScan(**ap))
-
-  WifiScan.objects.bulk_create(list_results)
+  try:
+    WifiScan.objects.bulk_create(list_results)
+    return "1"
+  except:
+    return "Error Adding Entries to Database!"

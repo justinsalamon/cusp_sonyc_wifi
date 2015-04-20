@@ -63,6 +63,7 @@ public class MainActivity extends Activity {
 	TextView text;
 	TextView ssid;
 	TextView errorText;
+	TextView quitStatus;
 	int counter;
 	int numOfSSID;
 	WifiManager wifi;
@@ -553,7 +554,7 @@ public class MainActivity extends Activity {
 						HttpConnectionParams.setConnectionTimeout(httpParams, TIMEOUT_MILLISEC);
 						HttpConnectionParams.setSoTimeout(httpParams, TIMEOUT_MILLISEC);
 						HttpClient client = new DefaultHttpClient(httpParams);
-						HttpPost request = new HttpPost();
+						HttpPost request = new HttpPost();  // URL GOES HERE
 						try {
 							//Log.i("doInBackground", header);
 							String L = sendUp.toString();
@@ -568,17 +569,44 @@ public class MainActivity extends Activity {
 
 
 							if(responseStr.equals("1")){
+								final TextView quitStatus = (TextView) findViewById(R.id.quitStatus);
 								if (size >= 100) {
 									for (int i = 0; i < 100; i++){
 										Log.i("doInBackground", tFileList.get(i).toString() + "SENT UP NOW!");
 										changeFileName(tFileList.get(i));
+										final double num = i;
+										runOnUiThread(new Thread() {
+											public void run() {
+												double percent = num;
+												quitStatus.setText("Please don't kill app, " + num + "% done ");
+											}
+										});
+										
 									}
+									runOnUiThread(new Thread() {
+										public void run() {
+											quitStatus.setText("Safe to kill app!");
+										}
+									});
 								} else if (size < 100) {
 									for (int i = 0; i < size; i++) {
 										Log.i("doInBackground", tFileList.get(i).toString() + "SENT UP NOW!");
 										changeFileName(tFileList.get(i));
+										final double num = i;
+										final double denominator = size;
+										runOnUiThread(new Thread() {
+											public void run() {
+												double percent = (num/denominator)*100.0;
+												quitStatus.setText("Please don't kill app, " + percent + "% done ");
+											}
+										});
 									}
 									deleteOldFiles();
+									runOnUiThread(new Thread() {
+										public void run() {
+											quitStatus.setText("Safe to kill app!");
+										}
+									});
 								}
 
 								//Sweet

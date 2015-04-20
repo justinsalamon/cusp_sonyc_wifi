@@ -1,4 +1,0 @@
-INDEX VERSION 1.126+C:\Users\Nick\Documents\sonyc\.metadata\.plugins\org.eclipse.jdt.core
-539470984.index
-4198351462.index
-2049309774.index

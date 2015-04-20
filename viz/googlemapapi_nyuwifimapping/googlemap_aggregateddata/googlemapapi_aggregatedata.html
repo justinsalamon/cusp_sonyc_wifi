@@ -1,0 +1,115 @@
+<!doctype html>
+<html>
+    <head>
+
+        <title>GooglemapAPI_nyuwifimapping</title>
+    
+        <style>
+            html, body, #map-canvas { height: 90%; width :80%; margin: 50; padding: 0;}
+            body{
+                text-align: right;
+                font-family: arial;
+            }
+
+            .button{
+                margin:0px;
+
+                font-size:16px;
+                font-weight: bold;
+                padding:5px 10px;
+            }
+        </style>
+        <script type="text/javascript"src="https://maps.googleapis.com/maps/api/js?sensor = true">
+        </script>
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+        <script type="text/javascript" src="underscore.js"></script>
+        <div id="map-canvas"></div>
+        <script type = "text/javascript" src = "markerclusterer.js"></script>
+        <script type ="text/javascript">
+             function initialize() {
+                myLatlng = { lat: 40.6940186, lng: -73.9865094};
+                mapOptions = {
+                center: myLatlng,
+                zoom: 12
+                };
+                map = new google.maps.Map(document.getElementById('map-canvas'),
+                    mapOptions);//load map
+                }
+                mcOptions ={gridsize: 1000, maxZoom:27};
+                markers = [];// crate the markers you want to add and collect them into a array
+                
+
+
+            google.maps.event.addDomListener(window, 'load', initialize);
+        // //When DOM loaded we attach click event to button
+            $(document).ready(function() {
+            
+            //after button is clicked we download the data
+                $('.button').click(function(){
+
+                //start ajax request
+                    $.ajax({
+                        url: "data.json",
+                    //force to handle it as text
+                        dataType: "text",
+                        success: function(data) {
+                        //data downloaded so we call parseJSON function 
+                        //and pass downloaded data
+                            arr = [];
+                            json = $.parseJSON(data);
+                        //now json variable contains data in json format
+                            groupedData = _.groupBy(json, function(d){return d.time});
+                            //groupedData make one point into a object
+                            // _.each need underscore.js lib
+                            _.each(groupedData,function(obj){
+                                highestlevel = _.max(obj,function(d){return d.level});
+                                console.log(highestlevel);
+                                arr.push(highestlevel)
+                            });
+                         
+                            
+                                
+                        //let's display a few items
+                        
+                            _.each(arr,function(obj){
+                                myLATLNG = {lat : obj.lat,lng : obj.lng};
+
+                                level ={level: obj.level}
+                    
+                                marker = new google.maps.Marker({
+                                    position: myLATLNG,
+                                    map:map,
+                                    title:"Hello World!",
+                                    icon: "wifi.png"
+                                    });
+                                markers.push(marker)
+                                
+                                
+
+                               
+                                
+                                
+                            
+                            });//foreach function
+                            
+                            mc = new MarkerClusterer(map,markers,mcOptions); 
+                        }//success funciton ending 
+                    });//axjx ending
+                    
+             });//click ending
+           
+            });//document ending
+
+    
+        </script>
+    </head>
+    <body>
+        <a href="data.json" target="_blank">Open JSON file</a><br />
+        <input type="button" value="Get and display JSONfile data" class="button" />
+        <br />
+        <span id="results"></span>
+        <div style="height:100%; width: 100%; margin = 50 px"> 
+            <div id="map-canvas"></div>
+        </div>
+    </body>
+</html>

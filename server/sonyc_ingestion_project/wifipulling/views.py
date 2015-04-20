@@ -71,16 +71,36 @@ def index(request):
                 pass
         if (q_startdate != ''):
             try:
-                mth, day, year = q_startdate.split('-',2)
+                mth, day, year = q_startdate.split('/',2)
                 dt = datetime.date(int(year), int(mth), int(day))
                 t_stamp = time.mktime(dt.timetuple()) * 1000
                 query_set = query_set.filter(time__gte=t_stamp)
             except:
                 pass
         if(q_ssid != ''):
-            query_set = query_set.filter(ssid=q_ssid)
+            try:
+                list_ssid = q_ssid.split('/')
+                multi_ssid = ''
+                for id in list_ssid:
+                    if (id != ''):
+                        multi_ssid += "ssid="+"\'" + id + "\'" + " OR "
+                query_set = query_set.extra(where=[multi_ssid[:-4]])
+            except:
+                pass
+        if (q_bssid != ''):
+            query_set = query_set.filter(bssid=q_bssid)
         if(q_caps != ''):
             query_set = query_set.filter(caps__contains=q_caps)
+        if (q_lvl != ''):
+            try:
+                query_set = query_set.filter(level__gte=q_lvl)
+            except:
+                pass
+        if (q_frq != ''):
+            try:
+                query_set = query_set.filter(freq=q_frq)
+            except:
+                pass
         
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         if (is_full_size == False):

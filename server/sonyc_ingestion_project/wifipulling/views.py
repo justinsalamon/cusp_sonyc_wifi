@@ -77,7 +77,23 @@ def index(request):
                 query_set = query_set.filter(time__gte=t_stamp)
             except:
                 pass
-        if(q_ssid != ''):
+        if (q_enddate != ''):
+            try:
+                mth, day, year = q_enddate.split('/',2)
+                dt = datetime.date(int(year), int(mth), int(day))
+                t_stamp = time.mktime(dt.timetuple()) * 1000
+                query_set = query_set.filter(time__lt=t_stamp)
+            except:
+                pass
+        if (q_dev_mac != ''):
+            query_set = query_set.filter(device_mac=q_dev_mac)
+        if(q_app_v != ''):
+            query_set = query_set.filter(app_version=q_app_v)
+        if (q_dro_v != ''):
+            query_set = query_set.filter(droid_version=q_dro_v)
+        if (q_dev_m != ''):
+            query_set = query_set.filter(device_model=q_dev_m)
+        if (q_ssid != ''):
             try:
                 list_ssid = q_ssid.split('/')
                 multi_ssid = ''

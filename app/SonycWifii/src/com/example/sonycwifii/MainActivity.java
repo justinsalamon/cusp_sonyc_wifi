@@ -557,7 +557,7 @@ public class MainActivity extends Activity {
 						HttpConnectionParams.setConnectionTimeout(httpParams, TIMEOUT_MILLISEC);
 						HttpConnectionParams.setSoTimeout(httpParams, TIMEOUT_MILLISEC);
 						HttpClient client = new DefaultHttpClient(httpParams);
-						HttpPost request = new HttpPost();  // URL GOES HERE
+						HttpPost request = new HttpPost("");  // URL GOES HERE
 						try {
 							//Log.i("doInBackground", header);
 							String L = sendUp.toString();
@@ -586,6 +586,7 @@ public class MainActivity extends Activity {
 										});
 										
 									}
+									deleteOldFiles();
 									runOnUiThread(new Thread() {
 										public void run() {
 											quitStatus.setText("Safe to kill app!");

@@ -64,6 +64,7 @@ public class MainActivity extends Activity {
 	TextView ssid;
 	TextView errorText;
 	TextView quitStatus;
+	ToggleButton toggle;
 	int counter;
 	int numOfSSID;
 	WifiManager wifi;
@@ -73,7 +74,7 @@ public class MainActivity extends Activity {
 	boolean wifiConnected;
 	boolean locationConnected;
 	boolean success = false;
-	boolean clicked = false;
+	boolean clicked = true;
 	String a;
 	String entry;
 	List<ScanResult> result;
@@ -95,6 +96,8 @@ public class MainActivity extends Activity {
 		setContentView(R.layout.activity_main);
 		scan = (Button) findViewById(R.id.scan);
 		stop = (Button) findViewById(R.id.stop);
+		toggle = (ToggleButton) findViewById(R.id.togglebutton);
+		toggle.setChecked(true);
 		File folder = new File(Environment.getExternalStorageDirectory() + "/WifiResults");
 		if (folder.exists()) {
 			isUploading = true;

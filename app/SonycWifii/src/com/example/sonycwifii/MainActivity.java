@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -81,6 +82,7 @@ public class MainActivity extends Activity {
 	PackageInfo pInfo;
 	String version;
 	String responseStr;
+	String mac = null;
 
 	
 
@@ -211,6 +213,9 @@ public class MainActivity extends Activity {
 		boolean lockedOn1 = false;
 		PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
 		PowerManager.WakeLock wl1 = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Scan WakeLock");
+		
+		
+		
 		/**
 		 * Contains the scanning and saving methods.
 		 * 
@@ -236,6 +241,10 @@ public class MainActivity extends Activity {
 				a = "";
 				WifiManager wifi = (WifiManager) params[0];
 				WifiInfo wInfo = wifi.getConnectionInfo();
+				if (mac == null) {
+					mac = wInfo.getMacAddress();
+					mac = "" + mac.hashCode();
+				}
 				//				LocationManager locMan = (LocationManager) params[1];
 
 				List<String> all = locMan.getAllProviders();
@@ -289,7 +298,8 @@ public class MainActivity extends Activity {
 						header.put("acc", location.getAccuracy());
 						//						header.put("time", location.getTime());
 						header.put("time", now.toMillis(true));
-						header.put("device_mac", wInfo.getMacAddress());
+						// header.put("device_mac", wInfo.getMacAddress());
+						header.put("device_mac", mac);
 						header.put("app_version", version);
 						header.put("droid_version", android.os.Build.VERSION.RELEASE);
 						header.put("device_model", Build.MODEL);

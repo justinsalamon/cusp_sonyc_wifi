@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Wifi Strength HeatMap</title>
+    <style>
+      h1{
+        /*background-color:yellow;*/
+        font-family: Arial;
+        font-style: italic;
+        text-align: center;
+        color :blue;
+        margin-top:5px;
+        margin-bottom: 5px;
+        border:5px,5px;
+      }
+      html, body, #map-canvas {
+        height: 100%;
+        margin: 0px;
+        padding-top: 0px
+      }
+      #panel {
+        position: absolute;
+        top: 5px;
+        left: 50%;
+        margin-left: -90px;
+        margin-top:45px;
+        z-index: 5;
+        background-color: #fff;
+        padding:10px;
+        border: 1px solid #999;
+      }
+    </style>
+    <script type="text/javascript"
+      src="https://maps.googleapis.com/maps/api/js?libraries=visualization&sensor=true"></script><!--visualization lib-->
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><!-- jquery lib-->
+
+    <script type="text/javascript" src="underscore.js"></script>
+    <script>
+// Adding 500 Data Points
+var map, heatmap,pointdata,pointArray;
+
+function initialize(){
+  $.ajax({
+    url: "or.json",
+    dataType: "text",
+    success: function(or) { //when load data is success, the function will be execuated
+      arr = [];
+      leveldata = [];
+      heatmaparray = [];
+      pointdata = [];
+      json = $.parseJSON(or);
+      groupedData = _.groupBy(json, function(d){return d.time});//group data by time get one position
+      _.each(groupedData,function(obj){
+        len = Object.keys(obj).length;///get the number of points for each psition
+        highestlevel = _.max(obj,function(d){return d.level});//get the highest level
+        positivelevel = Math.abs(highestlevel.level);
+        mylat = parseFloat((highestlevel.lat).toFixed(6))
+        mylong = parseFloat((highestlevel.lng).toFixed(6))
+        ll = positivelevel;//change the level to positive
+        levelobj = { 'lat': mylat, 'lng' : mylong, 'level':positivelevel,'count': len};
+        leveldata.push(levelobj)
+        latlng = new google.maps.LatLng(mylat,mylong);
+        weighteddata = {location: latlng, weight: ll}
+        pointdata.push(weighteddata);//push latlng to a pointdata
+      });//for each function ending
+      newdata = [];
+      sumlevel = 0;
+      groupdata2 = _.groupBy(leveldata,function(d){return d.lat});
+      _.each(groupdata2,function(obj){
+        len2 = Object.keys(obj).length;
+        level2 = _.min(obj,function(d){return d.level});
+        newlat = level2.lat;
+        newlng = level2.lng;
+        avglevel = (sumlevel/len2)
+        newlevel =(level2.level*100)
+        mylatlng = new google.maps.LatLng(newlat,newlng);
+        newweight= {location:mylatlng,weight:newlevel}
+        console.log(level2.level)
+        newdata.push(newweight)
+      });//fucntion groupdata2
+      // grouplevelData = _.groupBy(json2,function(d){return d.lat});
+      // console.log(grouplevelData);
+
+  
+  var mapOptions = {
+      zoom :17,
+      center: new google.maps.LatLng(40.7307, -73.996094),
+      mapTypeId: google.maps.MapTypeId.SATELLITE
+    } //mapoption ending 
+
+    map = new google.maps.Map(document.getElementById('map-canvas'),
+      mapOptions);
+
+    pointArray = new google.maps.MVCArray(newdata);
+    heatmap = new google.maps.visualization.HeatmapLayer({
+      data : pointArray
+      }) ;//heatmap ending 
+    heatmap.setMap(map)
+  },//success function ending
+  error : console.log('wrong')
+
+  });//ajax ending 
+  
+}//initialize function ending 
+
+
+
+function toggleHeatmap() {
+  heatmap.setMap(heatmap.getMap() ? null : map);
+}
+
+function changeGradient() {
+  var gradient = [
+    'rgba(0, 255, 255, 0)',
+    'rgba(255, 0, 0, 1)',
+    'rgba(191, 0, 31, 1)',
+    'rgba(127, 0, 63, 1)',
+    'rgba(63, 0, 91, 1)',
+    'rgba(0, 0, 127, 1)',
+    'rgba(0, 0, 159, 1)',
+    'rgba(0, 0, 191, 1)',
+    'rgba(0, 0, 223, 1)',
+    'rgba(0, 0, 255, 1)',
+    'rgba(0, 63, 255, 1)',
+    'rgba(0, 127, 255, 1)',
+    'rgba(0, 191, 255, 1)',
+    'rgba(0, 255, 255, 1)',
+    
+
+    
+    
+    
+    
+  
+    
+    
+    
+    
+    
+    
+    
+  ]
+}
+
+google.maps.event.addDomListener(window, 'load', initialize);
+function changeRadius() {
+  heatmap.set('radius', heatmap.get('radius') ? null : 20);
+}
+
+function changeOpacity() {
+  heatmap.set('opacity', heatmap.get('opacity') ? null : 0.2);
+}
+
+
+</script>
+  <h1>Washington Square Wifi-Strength Heatp</h1>
+  </head>
+
+  <body>
+    
+    <div id="panel">
+      <button onclick="toggleHeatmap()">Toggle Heatmap</button>
+      <button onclick="changeGradient()">Change gradient</button>
+      <button onclick="changeRadius()">Change radius</button>
+      <button onclick="changeOpacity()">Change opacity</button>
+    </div>
+    <div id="map-canvas"></div>
+  </body>
+</html>

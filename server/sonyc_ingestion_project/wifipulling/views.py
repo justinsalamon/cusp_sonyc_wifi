@@ -6,10 +6,9 @@ from ingestion.models import WifiScan
 import json
 import datetime
 import time
-def index(request):
-#     return HttpResponse("Hello. This is a test.")
 
-#     scan_list = WifiScan.objects.filter(ssid='nyu').values()
+def index(request):
+
     batch = 10 #default
     offset = 0 #default
     b_size = request.GET.get('batch', '')
@@ -77,7 +76,23 @@ def index(request):
                 query_set = query_set.filter(time__gte=t_stamp)
             except:
                 pass
-        if(q_ssid != ''):
+        if (q_enddate != ''):
+            try:
+                mth, day, year = q_enddate.split('/',2)
+                dt = datetime.date(int(year), int(mth), int(day))
+                t_stamp = time.mktime(dt.timetuple()) * 1000
+                query_set = query_set.filter(time__lt=t_stamp)
+            except:
+                pass
+        if (q_dev_mac != ''):
+            query_set = query_set.filter(device_mac=q_dev_mac)
+        if(q_app_v != ''):
+            query_set = query_set.filter(app_version=q_app_v)
+        if (q_dro_v != ''):
+            query_set = query_set.filter(droid_version=q_dro_v)
+        if (q_dev_m != ''):
+            query_set = query_set.filter(device_model=q_dev_m)
+        if (q_ssid != ''):
             try:
                 list_ssid = q_ssid.split('/')
                 multi_ssid = ''
@@ -105,26 +120,73 @@ def index(request):
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         if (is_full_size == False):
             query_set = query_set[idx_start:idx_end]
-         
-        for record in query_set:
-            data = {}
-            data['idx']=record.idx
-            data['lat']=record.lat
-            data['lng']=record.lng
-            data['acc']=record.acc
-            data['altitude']=record.altitude      
-            data['time']=(datetime.datetime.fromtimestamp(record.time/1000)).strftime('%m-%d-%Y %H:%M:%S')
-            data['device_mac']=record.device_mac
-            data['app_version']=record.app_version
-            data['droid_version']=record.droid_version
-            data['device_model']=record.device_model
-            data['ssid']=record.ssid
-            data['bssid']=record.bssid
-            data['caps']=record.caps
-            data['level']=record.level
-            data['freq']=record.freq
-     
-            response_data.append(data)
+        
+        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        human_readable = None
+        q_timeformat = request.GET.get('timeformat', '')
+        try:
+            human_readable = int(q_timeformat)
+        except:
+            pass
+        
+        if (human_readable == 1):
+            for record in query_set:
+                data = {}
+                data['idx']=record.idx
+                data['lat']=record.lat
+                data['lng']=record.lng
+                data['acc']=record.acc
+                data['altitude']=record.altitude      
+                data['time']=(datetime.datetime.fromtimestamp(record.time/1000)).strftime('%m-%d-%Y %H:%M:%S')
+                data['device_mac']=record.device_mac
+                data['app_version']=record.app_version
+                data['droid_version']=record.droid_version
+                data['device_model']=record.device_model
+                data['ssid']=record.ssid
+                data['bssid']=record.bssid
+                data['caps']=record.caps
+                data['level']=record.level
+                data['freq']=record.freq
+                response_data.append(data)
+        elif (human_readable == 2):
+            for record in query_set:
+                data = {}
+                data['idx']=record.idx
+                data['lat']=record.lat
+                data['lng']=record.lng
+                data['acc']=record.acc
+                data['altitude']=record.altitude
+                data['time']=str(record.time)      
+                data['time2']=(datetime.datetime.fromtimestamp(record.time/1000)).strftime('%m-%d-%Y %H:%M:%S')
+                data['device_mac']=record.device_mac
+                data['app_version']=record.app_version
+                data['droid_version']=record.droid_version
+                data['device_model']=record.device_model
+                data['ssid']=record.ssid
+                data['bssid']=record.bssid
+                data['caps']=record.caps
+                data['level']=record.level
+                data['freq']=record.freq
+                response_data.append(data)
+        
+        else:
+            for record in query_set:
+                data = {}
+                data['idx']=record.idx
+                data['lat']=record.lat
+                data['lng']=record.lng
+                data['acc']=record.acc
+                data['altitude']=record.altitude      
+                data['time']=str(record.time)
+                data['device_mac']=record.device_mac
+                data['app_version']=record.app_version
+                data['droid_version']=record.droid_version
+                data['device_model']=record.device_model
+                data['ssid']=record.ssid
+                data['bssid']=record.bssid
+                data['caps']=record.caps
+                data['level']=record.level
+                data['freq']=record.freq
+                response_data.append(data)    
     return HttpResponse(json.dumps(response_data), content_type="application/json")
-#     return HttpResponse(scan_list)#, mimetype='application/json')
-#     return HttpResponse(scan_list)
+

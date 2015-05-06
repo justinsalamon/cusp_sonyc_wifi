@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -64,6 +65,7 @@ public class MainActivity extends Activity {
 	TextView ssid;
 	TextView errorText;
 	TextView quitStatus;
+	ToggleButton toggle;
 	int counter;
 	int numOfSSID;
 	WifiManager wifi;
@@ -73,13 +75,14 @@ public class MainActivity extends Activity {
 	boolean wifiConnected;
 	boolean locationConnected;
 	boolean success = false;
-	boolean clicked = false;
+	boolean clicked = true;
 	String a;
 	String entry;
 	List<ScanResult> result;
 	PackageInfo pInfo;
 	String version;
 	String responseStr;
+	String mac = null;
 
 	
 
@@ -95,6 +98,8 @@ public class MainActivity extends Activity {
 		setContentView(R.layout.activity_main);
 		scan = (Button) findViewById(R.id.scan);
 		stop = (Button) findViewById(R.id.stop);
+		toggle = (ToggleButton) findViewById(R.id.togglebutton);
+		toggle.setChecked(true);
 		File folder = new File(Environment.getExternalStorageDirectory() + "/WifiResults");
 		if (folder.exists()) {
 			isUploading = true;
@@ -208,6 +213,9 @@ public class MainActivity extends Activity {
 		boolean lockedOn1 = false;
 		PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
 		PowerManager.WakeLock wl1 = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Scan WakeLock");
+		
+		
+		
 		/**
 		 * Contains the scanning and saving methods.
 		 * 
@@ -233,6 +241,10 @@ public class MainActivity extends Activity {
 				a = "";
 				WifiManager wifi = (WifiManager) params[0];
 				WifiInfo wInfo = wifi.getConnectionInfo();
+				if (mac == null) {
+					mac = wInfo.getMacAddress();
+					mac = "" + mac.hashCode();
+				}
 				//				LocationManager locMan = (LocationManager) params[1];
 
 				List<String> all = locMan.getAllProviders();
@@ -286,7 +298,8 @@ public class MainActivity extends Activity {
 						header.put("acc", location.getAccuracy());
 						//						header.put("time", location.getTime());
 						header.put("time", now.toMillis(true));
-						header.put("device_mac", wInfo.getMacAddress());
+						// header.put("device_mac", wInfo.getMacAddress());
+						header.put("device_mac", mac);
 						header.put("app_version", version);
 						header.put("droid_version", android.os.Build.VERSION.RELEASE);
 						header.put("device_model", Build.MODEL);
@@ -554,7 +567,7 @@ public class MainActivity extends Activity {
 						HttpConnectionParams.setConnectionTimeout(httpParams, TIMEOUT_MILLISEC);
 						HttpConnectionParams.setSoTimeout(httpParams, TIMEOUT_MILLISEC);
 						HttpClient client = new DefaultHttpClient(httpParams);
-						HttpPost request = new HttpPost();  // URL GOES HERE
+						HttpPost request = new HttpPost("");  // URL GOES HERE
 						try {
 							//Log.i("doInBackground", header);
 							String L = sendUp.toString();
@@ -583,6 +596,7 @@ public class MainActivity extends Activity {
 										});
 										
 									}
+									deleteOldFiles();
 									runOnUiThread(new Thread() {
 										public void run() {
 											quitStatus.setText("Safe to kill app!");

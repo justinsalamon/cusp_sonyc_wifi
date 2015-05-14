@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Heatmaps</title>
+    <style>
+      html, body, #map-canvas {
+        height: 100%;
+        margin: 0px;
+        padding: 0px
+      }
+      #panel {
+        position: absolute;
+        top: 5px;
+        left: 50%;
+        margin-left: -180px;
+        z-index: 5;
+        background-color: #fff;
+        padding: 5px;
+        border: 1px solid #999;
+      }
+    </style>
+    <script type="text/javascript"
+      src="https://maps.googleapis.com/maps/api/js?libraries=visualization&sensor=true"></script><!--visualization lib-->
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><!-- jquery lib-->
+
+    <script type="text/javascript" src="underscore.js"></script>
+    <script>
+// Adding 500 Data Points
+var map, heatmap,pointdata,pointArray,levelPointArray,scanArray;
+
+function initialize(){
+  $.ajax({
+    url: "data.json",
+    dataType: "text",
+    success: function(data) { //when load data is success, the function will be execuated
+      arr = [];
+      heatmaparray = [];
+      pointdata = [];
+      leveldata = [];
+      scandata = [];
+      json = $.parseJSON(data);
+      groupedData = _.groupBy(json, function(d){return d.time});//group data by time get one position
+      _.each(groupedData,function(obj){
+        len = Object.keys(obj).length;///get the number of points for each psition
+        highestlevel = _.max(obj,function(d){return d.level});//get the highest level
+        positivelevel = Math.abs(highestlevel.level);//change the level to positive
+        levelobj = { 'lat': highestlevel.lat, 'lng' : highestlevel.lng, 'level':positivelevel,'count': len};
+        latlng = new google.maps.LatLng(highestlevel.lat,highestlevel.lng);
+        levellatlng = {location:latlng,weight: positivelevel};
+        scanreading = {location:latlng,weight:len}
+        pointdata.push(latlng);//push latlng to a pointdata
+        leveldata.push(levellatlng);
+        scandata.push(scanreading);
+        console.log(levelobj); 
+      });//for each function ending
+    
+
+  var mapOptions = {
+      zoom :15,
+      center: new google.maps.LatLng(40.6940186, -73.986094),
+      mapTypeId: google.maps.MapTypeId.SATELLITE
+    } //mapoption ending 
+
+    map = new google.maps.Map(document.getElementById('map-canvas'),
+      mapOptions);
+
+    pointArray = new google.maps.MVCArray(pointdata);
+    heatmap = new google.maps.visualization.HeatmapLayer({
+      data : pointArray
+      }) ;//heatmap ending 
+    heatmap.setMap(map)
+  }//success function ending
+  });//ajax ending 
+  
+}//initialize function ending 
+
+
+
+function toggleHeatmap() {
+  heatmap.setMap(heatmap.getMap() ? null : map);
+}
+
+function changeGradient() {
+  var gradient = [
+    'rgba(0, 255, 255, 0)',
+    'rgba(0, 255, 255, 1)',
+    'rgba(0, 191, 255, 1)',
+    'rgba(0, 127, 255, 1)',
+    'rgba(0, 63, 255, 1)',
+    'rgba(0, 0, 255, 1)',
+    'rgba(0, 0, 223, 1)',
+    'rgba(0, 0, 191, 1)',
+    'rgba(0, 0, 159, 1)',
+    'rgba(0, 0, 127, 1)',
+    'rgba(63, 0, 91, 1)',
+    'rgba(127, 0, 63, 1)',
+    'rgba(191, 0, 31, 1)',
+    'rgba(255, 0, 0, 1)'
+  ]
+}
+
+google.maps.event.addDomListener(window, 'load', initialize);
+function changeRadius() {
+  heatmap.set('radius', heatmap.get('radius') ? null : 20);
+}
+
+function changeOpacity() {
+  heatmap.set('opacity', heatmap.get('opacity') ? null : 0.2);
+}
+function levelheatmap(){
+    levelPointArray = new google.maps.MVCArray(leveldata);
+    heatmap = new google.maps.visualization.HeatmapLayer({
+      data : levelPointArray
+      }) ;//heatmap ending 
+    heatmap.setMap(map);
+
+}
+function readingsheatmap(){
+    scanArray = new google.maps.MVCArray(scandata);
+    heatmap = new google.maps.visualization.HeatmapLayer({
+      data : scanArray
+      }) ;//heatmap ending 
+    heatmap.setMap(map);
+}
+
+</script>
+  </head>
+
+  <body>
+    <div id="panel">
+      <button onclick="toggleHeatmap()">Toggle Heatmap</button>
+      <button onclick="changeGradient()">Change gradient</button>
+      <button onclick="changeRadius()">Change radius</button>
+      <button onclick="changeOpacity()">Change opacity</button>
+      <button onclick="levelheatmap()">Level Heat Map</button>
+      <button onclick= "readingsheatmap()">Scans Heat Map</button>
+    </div>
+    <div id="map-canvas"></div>
+  </body>
+</html>

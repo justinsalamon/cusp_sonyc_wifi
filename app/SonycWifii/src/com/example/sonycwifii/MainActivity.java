@@ -546,11 +546,11 @@ public class MainActivity extends Activity {
 						}
 					}
 					if (tripped == 1) {
-						runOnUiThread(new Thread() {
-							public void run() {
-								quitStatus.setText("Please don't kill app, uploading now!");
-							}
-						});
+//						runOnUiThread(new Thread() {
+//							public void run() {
+//								quitStatus.setText("Please don't kill app, uploading now!");
+//							}
+//						});
 						try {
 							sendUp.put("scans", scansArr);
 						} catch (JSONException e1) {

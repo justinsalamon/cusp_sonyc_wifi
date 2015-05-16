@@ -22,7 +22,7 @@
     </style>
     <script type="text/javascript"
       src="https://maps.googleapis.com/maps/api/js?libraries=visualization&sensor=true"></script><!--visualization lib-->
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><!-- jquery lib-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><!-- jquery lib-->
 
     <script type="text/javascript" src="underscore.js"></script>
     <script>
@@ -31,8 +31,8 @@ var map, heatmap,pointdata,pointArray,levelPointArray,scanArray;
 
 function initialize(){
   $.ajax({
-    url: "data.json",
-    dataType: "text",
+    url: "http://capstone.cloudapp.net/wifipulling/?batch=1000",
+    dataType: "text/json",
     success: function(data) { //when load data is success, the function will be execuated
       arr = [];
       heatmaparray = [];

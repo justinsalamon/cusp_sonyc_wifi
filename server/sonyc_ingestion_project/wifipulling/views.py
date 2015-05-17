@@ -3,9 +3,11 @@ from django.shortcuts import render
 # Create your views here.
 from django.http import HttpResponse
 from ingestion.models import WifiScan
-import json
+import simplejson as json
 import datetime
 import time
+
+col_name = {'idx':1, 'lat':1, 'lng':1, 'acc':1, 'altitude':1, 'time':1, 'device_mac':1, 'app_version':1, 'droid_version':1, 'device_model':1, 'ssid':1, 'bssid':1, 'caps':1, 'level':1, 'freq':1}
 
 def index(request):
 
@@ -44,6 +46,7 @@ def index(request):
     q_caps = request.GET.get('caps', '')
     q_lvl = request.GET.get('level', '')
     q_frq = request.GET.get('freq', '')
+    q_colname = request.GET.get('columns', '')
     
     query_set = None
     try:
@@ -94,7 +97,7 @@ def index(request):
             query_set = query_set.filter(device_model=q_dev_m)
         if (q_ssid != ''):
             try:
-                list_ssid = q_ssid.split('/')
+                list_ssid = q_ssid.split('|')
                 multi_ssid = ''
                 for id in list_ssid:
                     if (id != ''):
@@ -122,71 +125,49 @@ def index(request):
             query_set = query_set[idx_start:idx_end]
         
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        human_readable = None
+        human_readable = 0
         q_timeformat = request.GET.get('timeformat', '')
         try:
             human_readable = int(q_timeformat)
         except:
             pass
         
-        if (human_readable == 1):
-            for record in query_set:
-                data = {}
-                data['idx']=record.idx
-                data['lat']=record.lat
-                data['lng']=record.lng
-                data['acc']=record.acc
-                data['altitude']=record.altitude      
-                data['time']=(datetime.datetime.fromtimestamp(record.time/1000)).strftime('%m-%d-%Y %H:%M:%S')
-                data['device_mac']=record.device_mac
-                data['app_version']=record.app_version
-                data['droid_version']=record.droid_version
-                data['device_model']=record.device_model
-                data['ssid']=record.ssid
-                data['bssid']=record.bssid
-                data['caps']=record.caps
-                data['level']=record.level
-                data['freq']=record.freq
-                response_data.append(data)
-        elif (human_readable == 2):
-            for record in query_set:
-                data = {}
-                data['idx']=record.idx
-                data['lat']=record.lat
-                data['lng']=record.lng
-                data['acc']=record.acc
-                data['altitude']=record.altitude
-                data['time']=str(record.time)      
-                data['time2']=(datetime.datetime.fromtimestamp(record.time/1000)).strftime('%m-%d-%Y %H:%M:%S')
-                data['device_mac']=record.device_mac
-                data['app_version']=record.app_version
-                data['droid_version']=record.droid_version
-                data['device_model']=record.device_model
-                data['ssid']=record.ssid
-                data['bssid']=record.bssid
-                data['caps']=record.caps
-                data['level']=record.level
-                data['freq']=record.freq
-                response_data.append(data)
+        is_distinct = 0
+        q_distinct = request.GET.get('distinct', '')
+        try:
+            is_distinct = int(q_distinct)
+        except:
+            pass
         
+        tem=[]
+        list_name=[]
+        if (q_colname == ''):
+            if (is_distinct == 1):
+                tem=query_set.values().distinct()
+            else:
+                tem=query_set.values()
         else:
-            for record in query_set:
-                data = {}
-                data['idx']=record.idx
-                data['lat']=record.lat
-                data['lng']=record.lng
-                data['acc']=record.acc
-                data['altitude']=record.altitude      
-                data['time']=str(record.time)
-                data['device_mac']=record.device_mac
-                data['app_version']=record.app_version
-                data['droid_version']=record.droid_version
-                data['device_model']=record.device_model
-                data['ssid']=record.ssid
-                data['bssid']=record.bssid
-                data['caps']=record.caps
-                data['level']=record.level
-                data['freq']=record.freq
-                response_data.append(data)    
+            list_name = q_colname.split('|')
+            args = []
+            for name in list_name:
+                if name in col_name:
+                    args.append(name)
+            if (is_distinct == 1):
+                tem=query_set.values(*args).distinct()
+            else:
+                tem=query_set.values(*args)
+        
+        key = 'time'
+        if (q_colname == '' or key in list_name):
+            if (human_readable == 1):
+                for item in tem:
+                    item[key]=(datetime.datetime.fromtimestamp(item[key]/1000)).strftime('%m-%d-%Y %H:%M:%S')
+            elif(human_readable == 2):
+                for item in tem:
+                    item['time2']=(datetime.datetime.fromtimestamp(item[key]/1000)).strftime('%m-%d-%Y %H:%M:%S')
+
+        response_data = list(tem)
+            
+            
     return HttpResponse(json.dumps(response_data), content_type="application/json")
 

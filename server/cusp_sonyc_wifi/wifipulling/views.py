@@ -119,11 +119,7 @@ def index(request):
                 query_set = query_set.filter(freq=q_frq)
             except:
                 pass
-        
-        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        if (is_full_size == False):
-            query_set = query_set[idx_start:idx_end]
-        
+                
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         human_readable = 0
         q_timeformat = request.GET.get('timeformat', '')
@@ -157,6 +153,11 @@ def index(request):
             else:
                 tem=query_set.values(*args)
         
+        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        if (is_full_size == False):
+            tem = tem[idx_start:idx_end]
+        
+        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         key = 'time'
         if (q_colname == '' or key in list_name):
             if (human_readable == 1):

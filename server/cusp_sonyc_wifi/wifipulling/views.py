@@ -158,6 +158,7 @@ def index(request):
             tem = tem[idx_start:idx_end]
         
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        
         key = 'time'
         if (q_colname == '' or key in list_name):
             if (human_readable == 1):

@@ -1,4 +1,8 @@
 pwords.*
 db.sqlite3
 b.txt
+<<<<<<< HEAD
+app/SonycWifii/bin/*
+=======
 .DS_Store
+>>>>>>> 2ca2795fc57a371f94568b5e20685a44eaa76442

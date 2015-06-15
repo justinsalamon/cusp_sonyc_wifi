@@ -33,7 +33,7 @@ function initialize() {
 			console.log(err);
 		},
 		success: function(data) {
-			console.log(data);
+			//console.log(data);
 			addLocations(data, map);
 		}
 	});

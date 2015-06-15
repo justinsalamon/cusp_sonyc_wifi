@@ -4,32 +4,61 @@
     <meta charset="utf-8">
     <title>Wifi Strength Locations</title>
     <style>
-      h1{
+      /*h1{*/
         /*background-color:yellow;*/
-        font-family: Arial;
+       /* font-family: Arial;
         font-style: italic;
         text-align: center;
         color :blue;
         margin-top:5px;
-        margin-bottom: 5px;
+        margin-bottom: 5px;*/
 
-      }
+     /* }*/
       html, body, #map-canvas {
         height: 100%;
-        margin: 0px;
+        margin-right: 0px;
+        margin-left:0px;
+        margin-top:0px;
         padding-top: 0px
       }
       #panel {
         position: absolute;
-        top: 5px;
+        top: 0px;
         left: 50%;
         margin-left: -90px;
-        margin-top:65px;
+        margin-top:5px;
         z-index: 5;
-        background-color: #fff;
+        background-color:white;
         padding:10px;
         border: 1px solid #999;
+        opacity:0.75;
+
+
       }
+      #form{
+        position: absolute;
+        top: 0px;
+        left: 50%;
+        margin-left: 380px;
+        margin-top:115px;
+        z-index: 5;
+        background-color:white;
+        padding:10px;
+        border: 3px solid #999;
+        opacity:0.7;
+      }
+     /* #panel2{
+        position: absolute;
+        top: 0px;
+        left: 50%;
+        margin-left: -90px;
+        margin-top:100px;
+        z-index: 5;
+        background-color:yellow;
+        padding:10px;
+        border: 1px solid #999;
+
+      }*/
     </style>
     <script type="text/javascript"
       src="https://maps.googleapis.com/maps/api/js?libraries=visualization&sensor=true"></script><!--visualization lib-->
@@ -43,7 +72,7 @@
 var map, heatmap,pointdata,pointArray;
 
 function initialize(){
-  
+  var a ="1";
   $.ajax({
     url: "http://capstone.cloudapp.net/wifipulling/?columns=lat|lng&distinct=1",
     dataType:"text",
@@ -115,21 +144,62 @@ function initialize(){
   });//ajax ending 
   
 }//initialize function ending 
-function showmarkers(){
-  _.each(json,function(obj){
-  myLATLNG = {lat : obj.lat,lng : obj.lng};
+function markerscluster(){
+  
+    _.each(json,function(obj){
+    myLATLNG = {lat : obj.lat,lng : obj.lng};
 
-  level ={level: obj.level}
+    level ={level: obj.level}
                     
-  marker = new google.maps.Marker({
-  position: myLATLNG,
-  map:map,
-  title:"Hello World!",
-    });
+    marker = new google.maps.Marker({
+    position: myLATLNG,
+    icon:{
+      path:google.maps.SymbolPath.CIRCLE,
+      scale:1,
+      fillOpacity:1,
+    },
+    map:map,
+  
+      });//markers
   markers.push(marker)
   });//foreach function
   mc = new MarkerClusterer(map,markers,mcOptions);
-}
+  
+}//showmarkers ends
+function showmarkers(){
+  $.ajax({
+    url: "http://capstone.cloudapp.net/wifipulling/?device_mac="+document.getElementById('device_mac').value+"&columns=lat|lng&distinct=1&batch="+document.getElementById('batch').value+"&offset="+document.getElementById("offset").value,
+    dataType:"text",
+
+    success: function(or) { //when load data is success, the function will be execuated
+      // arr = [];
+      // leveldata = [];
+      // heatmaparray = [];
+      // pointdata = [];
+      // markers = [];
+      // mcOptions ={gridsize: 10000, maxZoom:27};
+      json = $.parseJSON(or);
+    _.each(json,function(obj){
+    myLATLNG = {lat : obj.lat,lng : obj.lng};
+
+    level ={level: obj.level}
+                    
+    marker = new google.maps.Marker({
+    position: myLATLNG,
+    icon:{
+      path:google.maps.SymbolPath.CIRCLE,
+      scale:1,
+      fillOpacity:1,
+    },
+    map:map,
+  
+      });//markers
+  // markers.push(marker)
+  });//foreach function
+  // mc = new MarkerClusterer(map,markers,mcOptions);
+  }
+  });//ajax ends
+}//showmarkers ends
 function dismiss(){
   initialize();
 
@@ -182,17 +252,26 @@ function changeOpacity() {
 
 
 </script>
-  <h1>NYC_wifi_locations</h1>
+ <!--  <h1>NYC_wifi_locations</h1> -->
 
   </head>
 
   <body>
     
+    <div id = "form">
+    <p>NYC Sonic Wifi</p>
+    <p>Batch:<input type = "text" name = "batch" id = "batch"></p>
+    <p>Offset:<input type = "test" name = "offset" id = "offset"></p>
+    <p>Device_mac:<input type = "test" name = "device_mac" id = "device_mac"></p>
+    <p><button onclick = "showmarkers()">Submit</button></p>
+
+
+    </div>
     <div id="panel">
       <button onclick="toggleHeatmap()">Toggle Heatmap</button>
       <button onclick="changeRadius()">Change radius</button>
       <button onclick="changeOpacity()">Change opacity</button>
-      <button onclick="showmarkers()">Measurements</button>
+      <button onclick="markerscluster()">Measurements</button>
       <button onclick= "dismiss()">Initialize</button>
     </div>
     <div id="map-canvas"></div>

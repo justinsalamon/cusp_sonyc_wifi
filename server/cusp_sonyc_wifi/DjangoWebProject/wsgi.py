@@ -15,7 +15,7 @@ framework.
 """
 import os
 import sys
-sys.path.append('/var/www/cusp_sonyc_wifi')
+sys.path.append('/var/www/cusp_sonyc_wifi/server/cusp_sonyc_wifi')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "DjangoWebProject.settings")
 
 # This application object is used by any WSGI server configured to use this

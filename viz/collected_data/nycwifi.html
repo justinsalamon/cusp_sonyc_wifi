@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Wifi Strength Locations</title>
+    <style>
+      /*h1{*/
+        /*background-color:yellow;*/
+       /* font-family: Arial;
+        font-style: italic;
+        text-align: center;
+        color :blue;
+        margin-top:5px;
+        margin-bottom: 5px;*/
+
+     /* }*/
+      html, body, #map-canvas {
+        height: 100%;
+        margin-right: 0px;
+        margin-left:0px;
+        margin-top:0px;
+        padding-top: 0px
+      }
+      #panel {
+        position: absolute;
+        top: 0px;
+        left: 50%;
+        margin-left: -90px;
+        margin-top:5px;
+        z-index: 5;
+        background-color:white;
+        padding:10px;
+        border: 1px solid #999;
+        opacity:0.75;
+
+
+      }
+      #form{
+        position: absolute;
+        top: 0px;
+        left: 50%;
+        margin-left: 380px;
+        margin-top:115px;
+        z-index: 5;
+        background-color:white;
+        padding:10px;
+        border: 3px solid #999;
+        opacity:0.7;
+      }
+     /* #panel2{
+        position: absolute;
+        top: 0px;
+        left: 50%;
+        margin-left: -90px;
+        margin-top:100px;
+        z-index: 5;
+        background-color:yellow;
+        padding:10px;
+        border: 1px solid #999;
+
+      }*/
+    </style>
+    <script type="text/javascript"
+      src="https://maps.googleapis.com/maps/api/js?libraries=visualization&sensor=true"></script><!--visualization lib-->
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><!-- jquery lib-->
+
+    <script type="text/javascript" src="underscore.js"></script>
+    <script type = "text/javascript" src = "markerclusterer.js"></script>
+    <script>
+
+// Adding 500 Data Points
+var map, heatmap,pointdata,pointArray;
+
+function initialize(){
+  var a ="1";
+  $.ajax({
+    url: "http://capstone.cloudapp.net/wifipulling/?columns=lat|lng&distinct=1",
+    dataType:"text",
+
+    success: function(or) { //when load data is success, the function will be execuated
+      arr = [];
+      leveldata = [];
+      heatmaparray = [];
+      pointdata = [];
+      markers = [];
+      mcOptions ={gridsize: 10000, maxZoom:27};
+      json = $.parseJSON(or);
+      // groupedData = _.groupBy(json, function(d){return d.time});//group data by time get one position
+      _.each(json,function(obj){
+      //   len = Object.keys(obj).length;///get the number of points for each psition
+      //   highestlevel = _.max(obj,function(d){return d.level});//get the highest level
+      //   positivelevel = Math.abs(highestlevel.level);
+        mylat = obj.lat;
+        mylng = obj.lng;
+        // ll = positivelevel;//change the level to positive
+        levelobj = { 'lat': mylat, 'lng' : mylng};
+        leveldata.push(levelobj)
+        // arr.push(highestlevel)
+        latlng = new google.maps.LatLng(mylat,mylng);
+        weighteddata = {location: latlng}
+        pointdata.push(weighteddata);
+
+      //push latlng to a pointdata
+      });//for each function ending
+    
+                            
+      // newdata = [];
+      // sumlevel = 0;
+      // groupdata2 = _.groupBy(leveldata,function(d){return d.lat});
+      // _.each(groupdata2,function(obj){
+      //   len2 = Object.keys(obj).length;
+      //   level2 = _.min(obj,function(d){return d.level});
+      //   newlat = level2.lat;
+      //   newlng = level2.lng;
+      //   avglevel = (sumlevel/len2)
+      //   newlevel =(level2.level*100)
+      //   mylatlng = new google.maps.LatLng(newlat,newlng);
+      //   newweight= {location:mylatlng,weight:newlevel}
+      //   console.log(level2.level)
+      //   newdata.push(newweight)
+      // });//fucntion groupdata2
+      // grouplevelData = _.groupBy(json2,function(d){return d.lat});
+      // console.log(grouplevelData);
+
+  
+  var mapOptions = {
+      zoom :12,
+      center: new google.maps.LatLng(40.7307, -73.996094),
+      mapTypeId: google.maps.MapTypeId.ROADMAP
+    } //mapoption ending 
+
+    map = new google.maps.Map(document.getElementById('map-canvas'),
+      mapOptions);
+    mc = new MarkerClusterer(map,markers,mcOptions);
+    pointArray = new google.maps.MVCArray(pointdata);
+    heatmap = new google.maps.visualization.HeatmapLayer({
+      data : pointArray
+      }) ;//heatmap ending 
+    heatmap.setMap(map)
+    
+  }//success function ending
+
+
+  });//ajax ending 
+  
+}//initialize function ending 
+function markerscluster(){
+  
+    _.each(json,function(obj){
+    myLATLNG = {lat : obj.lat,lng : obj.lng};
+
+    level ={level: obj.level}
+                    
+    marker = new google.maps.Marker({
+    position: myLATLNG,
+    icon:{
+      path:google.maps.SymbolPath.CIRCLE,
+      scale:1,
+      fillOpacity:1,
+    },
+    map:map,
+  
+      });//markers
+  markers.push(marker)
+  });//foreach function
+  mc = new MarkerClusterer(map,markers,mcOptions);
+  
+}//showmarkers ends
+function showmarkers(){
+  $.ajax({
+    url: "http://capstone.cloudapp.net/wifipulling/?device_mac="+document.getElementById('device_mac').value+"&columns=lat|lng&distinct=1&batch="+document.getElementById('batch').value+"&offset="+document.getElementById("offset").value,
+    dataType:"text",
+
+    success: function(or) { //when load data is success, the function will be execuated
+      // arr = [];
+      // leveldata = [];
+      // heatmaparray = [];
+      // pointdata = [];
+      // markers = [];
+      // mcOptions ={gridsize: 10000, maxZoom:27};
+      json = $.parseJSON(or);
+    _.each(json,function(obj){
+    myLATLNG = {lat : obj.lat,lng : obj.lng};
+
+    level ={level: obj.level}
+                    
+    marker = new google.maps.Marker({
+    position: myLATLNG,
+    icon:{
+      path:google.maps.SymbolPath.CIRCLE,
+      scale:1,
+      fillOpacity:1,
+    },
+    map:map,
+  
+      });//markers
+  // markers.push(marker)
+  });//foreach function
+  // mc = new MarkerClusterer(map,markers,mcOptions);
+  }
+  });//ajax ends
+}//showmarkers ends
+function dismiss(){
+  initialize();
+
+}
+function toggleHeatmap() {
+  heatmap.setMap(heatmap.getMap() ? null : map);
+}
+
+function changeGradient() {
+  var gradient = [
+    'rgba(0, 255, 255, 0)',
+    'rgba(255, 0, 0, 1)',
+    'rgba(191, 0, 31, 1)',
+    'rgba(127, 0, 63, 1)',
+    'rgba(63, 0, 91, 1)',
+    'rgba(0, 0, 127, 1)',
+    'rgba(0, 0, 159, 1)',
+    'rgba(0, 0, 191, 1)',
+    'rgba(0, 0, 223, 1)',
+    'rgba(0, 0, 255, 1)',
+    'rgba(0, 63, 255, 1)',
+    'rgba(0, 127, 255, 1)',
+    'rgba(0, 191, 255, 1)',
+    'rgba(0, 255, 255, 1)',
+    
+
+    
+    
+    
+    
+  
+    
+    
+    
+    
+    
+    
+    
+  ]
+}
+
+google.maps.event.addDomListener(window, 'load', initialize);
+function changeRadius() {
+  heatmap.set('radius', heatmap.get('radius') ? null : 20);
+}
+
+function changeOpacity() {
+  heatmap.set('opacity', heatmap.get('opacity') ? null : 0.2);
+}
+
+
+</script>
+ <!--  <h1>NYC_wifi_locations</h1> -->
+
+  </head>
+
+  <body>
+    
+    <div id = "form">
+    <p>NYC Sonic Wifi</p>
+    <p>Batch:<input type = "text" name = "batch" id = "batch"></p>
+    <p>Offset:<input type = "test" name = "offset" id = "offset"></p>
+    <p>Device_mac:<input type = "test" name = "device_mac" id = "device_mac"></p>
+    <p><button onclick = "showmarkers()">Submit</button></p>
+
+
+    </div>
+    <div id="panel">
+      <button onclick="toggleHeatmap()">Toggle Heatmap</button>
+      <button onclick="changeRadius()">Change radius</button>
+      <button onclick="changeOpacity()">Change opacity</button>
+      <button onclick="markerscluster()">Measurements</button>
+      <button onclick= "dismiss()">Initialize</button>
+    </div>
+    <div id="map-canvas"></div>
+  </body>
+</html>

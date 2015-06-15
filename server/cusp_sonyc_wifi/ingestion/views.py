@@ -22,8 +22,8 @@ def populate(info):
   #j = f.read()
   #f.close()
   #scan = json.loads(f.read())
-
   try:
+    info = unicode(info, errors='ignore')
     scan = json.loads(info)
   except:
     return "Invalid JSON"

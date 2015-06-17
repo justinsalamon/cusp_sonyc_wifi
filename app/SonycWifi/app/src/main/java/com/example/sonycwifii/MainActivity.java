@@ -370,6 +370,53 @@ public class MainActivity extends Activity {
 					//
 					//					} catch (ClientProtocolException e) {e.printStackTrace();
 					//					} catch (Exception e) {e.printStackTrace();} 
+				} else if (numOfSSID <= 0 && location.getTime() >= now.toMillis(true) - 10000 && location.getAccuracy() < 50) {
+					counter ++;
+					JSONObject header = new JSONObject();
+					try {
+						header.put("lat", location.getLatitude());
+						header.put("lng", location.getLongitude());
+						header.put("altitude", location.getAltitude());
+						header.put("acc", location.getAccuracy());
+						//						header.put("time", location.getTime());
+						header.put("time", now.toMillis(true));
+						// header.put("device_mac", wInfo.getMacAddress());
+						header.put("device_mac", mac);
+						header.put("app_version", version);
+						header.put("droid_version", android.os.Build.VERSION.RELEASE);
+						header.put("device_model", Build.MODEL);
+						JSONArray readingsArr = new JSONArray();
+						for (int i = 0; i <= result.size(); i++) {
+							JSONObject readings = new JSONObject();
+							readings.put("SSID", null);
+							readings.put("BSSID", null);
+							readings.put("caps", null);
+							readings.put("level", null);
+							readings.put("freq", null);
+							readingsArr.put(readings);
+						}
+						header.put("readings", readingsArr);
+					} catch(JSONException ex) {ex.printStackTrace();}
+
+					runOnUiThread(new Thread() {
+						public void run() {
+							TextView text = (TextView) findViewById(R.id.text);
+							text.setText("Number of scans: " + counter + "\n" + numOfSSID);
+							TextView ssid = (TextView) findViewById(R.id.ssid);
+							ssid.setText("Time and Accuracy: " + location.getAccuracy() + "\n" + sdf.format(location.getTime()));
+						}
+					});
+					if(isExternalStorageWritable()) {
+						try{
+							//							writeToFile(header.toString(5), location.getTime());
+							writeToFile(header.toString(5), now.toMillis(true));
+						} catch(JSONException ex) {ex.printStackTrace();}
+					}
+					else {
+						Log.e("doInBackground", "Cannot write to storage");
+					}
+
+					try {Thread.sleep(1000);} catch (InterruptedException e) {e.printStackTrace();}
 				}
 				else {
 					runOnUiThread(new Thread() {
@@ -552,11 +599,12 @@ public class MainActivity extends Activity {
 					}
 					if (tripped == 1) {
 						Log.i("doInBackground", "Got all pieces, about to make new JSON");
-//						runOnUiThread(new Thread() {
-//							public void run() {
-//								quitStatus.setText("Please don't kill app, uploading now!");
-//							}
-//						});
+						final TextView quitStatus = (TextView) findViewById(R.id.quitStatus);
+						runOnUiThread(new Thread() {
+							public void run() {
+								quitStatus.setText("Please don't kill app, uploading now!");
+							}
+						});
 						try {
 							sendUp.put("scans", scansArr);
 							Log.i("doInBackground", "Putting in JSON");
@@ -598,7 +646,7 @@ public class MainActivity extends Activity {
 
 							if(responseStr.equals("1")){
 								Log.i("doInBackground", "Sent up!");
-								final TextView quitStatus = (TextView) findViewById(R.id.quitStatus);
+//								final TextView quitStatus = (TextView) findViewById(R.id.quitStatus);
 								if (size >= 100) {
 									for (int i = 0; i < 100; i++){
 										Log.i("doInBackground", tFileList.get(i).toString() + "SENT UP NOW!");

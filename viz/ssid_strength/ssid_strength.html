@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>WIFI Strength For SSID</title>
+    <style>
+  
+      html, body, #map-canvas {
+        height: 100%;
+        margin: 0px;
+        padding-top: 0px
+      }
+ 
+      #form{
+        position: absolute;
+        top: 0px;
+        left: 50%;
+        margin-left: 380px;
+        margin-top:115px;
+        z-index: 5;
+        background-color:white;
+        padding:10px;
+        border: 3px solid #999;
+        opacity:0.7;
+      }
+    </style>
+    <script type="text/javascript"
+      src="https://maps.googleapis.com/maps/api/js?libraries=visualization&sensor=true"></script><!--visualization lib-->
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><!-- jquery lib-->
+
+    <script type="text/javascript" src="underscore.js"></script>
+    <script>
+
+// Adding 500 Data Points
+var map ;
+var infoWindow = new google.maps.InfoWindow();
+function initialize(){
+  var mapOptions = {
+      zoom :11,
+      center: new google.maps.LatLng(40.7307, -73.996094),
+      mapTypeId: google.maps.MapTypeId.ROADMAP
+    } //mapoption ending 
+
+    map = new google.maps.Map(document.getElementById('map-canvas'),
+      mapOptions);
+
+}
+// function removeDuplicated(arr){
+
+//   var n, y, x, i, r;
+
+
+//   var arrResult = {},
+//   nonDuplicatedArray = [];
+//   for (i = 0, n = arr.length; i < n; i++) {
+//       var item = arr[i];
+//       arrResult[item.lat + " - " + item.lng] = item;
+//   }
+//   i = 0;
+//   for (var item in arrResult) {
+//     nonDuplicatedArray[i++] = arrResult[item];
+//   }
+ 
+//   return nonDuplicatedArray//this array only contains lat|lng attribute 
+// }
+
+function showssid(){
+  $.ajax({
+    url: "http://capstone.cloudapp.net/wifipulling/?ssid="+document.getElementById('ssid').value,
+    dataType:"text",
+
+    success: function(data) { //when load data is success, the function will be execuated
+      rects = [];
+      filterdata = [];
+      leveldata = [];
+      resolution = 4;
+      latlng = []
+      showdata=[];
+      eps = 0.00005;
+
+      
+      json = $.parseJSON(data);
+      _.each(json,function(obj){
+        mylat = parseFloat((obj.lat).toFixed(4))
+        mylng = parseFloat((obj.lng).toFixed(4))//truncate lat|lng data
+        mylatlng = {'lat':mylat,'lng':mylng};
+        latlng.push(mylatlng)
+        filterbycolumns= {'location':[mylat,mylng],'level':obj.level,'time':obj.time};
+        filterdata.push(filterbycolumns)
+      });
+      groupbytime = _.groupBy(filterdata,function(d){return d.time});
+     
+      _.each(groupbytime,function(obj){
+        highestlevel = _.max(obj,function(d){return d.level});
+        leveldata.push(highestlevel);
+      
+      });
+    // console.log(leveldata)//array of  object for each time highest 
+    groupbylocation = _.groupBy(leveldata,function(d){return d.location});
+    for (key in groupbylocation){
+
+      len = groupbylocation[key].length;
+      mid = key.indexOf(',')
+      newlat = parseFloat(key.substring(0,key.indexOf(',')));
+      lngstr = key.substring(key.indexOf('-'))
+      newlng = parseFloat(lngstr);///HERE IS KIND OF TRICKY!!!
+      
+      sumlevel = 0;
+      len = groupbylocation[key].length;
+      // console.log(groupbylocation[key]);
+      for (i=0;i<len;i++){
+        sumlevel += groupbylocation[key][i].level;
+      }
+      avglevel = sumlevel/len;
+      finalrecord = {'lat':newlat,'lng':newlng,'level':avglevel,'measurement':len};
+      showdata.push(finalrecord);
+    };
+    function changemap(){
+    var mapOptions = {
+        zoom :15,
+        center: new google.maps.LatLng(showdata[0].lat, showdata[0].lng),
+       mapTypeId: google.maps.MapTypeId.ROADMAP
+     } //mapoption ending 
+
+      map = new google.maps.Map(document.getElementById('map-canvas'),
+       mapOptions);
+
+  }
+  changemap()
+ 
+    _.each(showdata,function(obj){
+      lat_SW = obj.lat - eps,
+      lng_SW = obj.lng - eps,
+      lat_NE = obj.lat + eps,
+      lng_NE = obj.lng + eps,
+      opacity = (obj.level+100)/100;
+      rectangle = new google.maps.Rectangle({
+        map:map,
+        fillColor:'red',
+        fillOpacity:opacity,
+        strokeOpacity:opacity,
+        strokeColor:'yellow',
+        clickable:true,
+        bounds: new google.maps.LatLngBounds(
+          new google.maps.LatLng(lat_SW,lng_SW),
+          new google.maps.LatLng(lat_NE,lng_NE))
+        });//rectangle function ends
+        rects.push(rectangle);
+
+      });//for each ends
+      // console.log(rects)
+      var addListener = function (i) {
+      google.maps.event.addListener(rects[i], 'click', function() {
+        var contentString = "<b>Average</b>: " + showdata[i].level.toFixed(2).toString() + " dB<br/>";
+            contentString = contentString + "<b>Measurements</b>: " + showdata[i].measurement.toString();
+        infoWindow.setContent(contentString);
+        infoWindow.setPosition(rects[i].getBounds().getCenter());
+        infoWindow.open(map);
+
+      });//google map addListener
+      };//add listener
+      for (i=0; i < rects.length; i++) {
+        addListener(i);
+        } 
+   }//success function ending
+
+
+  });//ajax ending 
+  
+}//show maps function ending
+
+
+  
+
+google.maps.event.addDomListener(window, 'load', initialize);
+
+
+
+
+
+
+</script>
+ 
+
+  </head>
+
+  <body>
+    <div id = "form">
+    <p>NYC Sonic Wifi</p>
+    <p>SSID:<input type = 'text' name = 'ssid'id = 'ssid'></p>
+    <button onclick = "showssid()">Confirm</button>
+    <button onclick = 'initialize()'>Clear</button>
+    </div>
+    <div id="map-canvas"></div>
+  </body>
+</html>

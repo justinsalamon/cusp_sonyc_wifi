@@ -1,0 +1,219 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>CM Gmaps layer test using Three.js</title>
+  <style>
+  html, body, #map-div {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+  }
+  </style>
+
+  <script src="http://code.jquery.com/jquery-1.10.2.js"></script>
+  <script src="http://maps.googleapis.com/maps/api/js?sensor=false"></script>
+
+  <script src="detector.js"></script>
+  <script src="three.js"></script>
+  <script src="threejs-layer.js"></script>
+  <script src="styles.js"></script>
+  <script src="http://underscorejs.org/underscore-min.js"></script>
+
+  <script type="x-shader/x-vertex" id="vertexshader">
+  attribute float customSize;
+  attribute float customOpacity;
+  attribute vec3 customColor;
+  varying vec3 vColor;
+  varying float vOpacity;
+  void main() 
+  {
+  vColor = customColor; // set color associated to vertex; use later in fragment shader
+  vOpacity = customOpacity;
+  vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+
+  // option (1): draw particles at constant size on screen
+  gl_PointSize = customSize;
+    // option (2): scale particles as objects in 3D space
+    //gl_PointSize = (1.0 + sin( customFrequency * time )) * 8.0 * ( 300.0 / length( mvPosition.xyz ) );
+    gl_Position = projectionMatrix * mvPosition;
+  }
+  </script>
+
+  <script type="x-shader/x-fragment" id="fragmentshader">
+  uniform sampler2D texture;
+varying vec3 vColor; // colors associated to vertices; assigned by vertex shader
+varying float vOpacity;
+void main() 
+{
+  // calculates a color for the particle
+  gl_FragColor = vec4( vColor, vOpacity );
+  // sets particle texture to desired color
+  gl_FragColor = gl_FragColor * texture2D( texture, gl_PointCoord );
+}
+</script>
+
+<script>
+var scaleVal = 1;
+var scaleMultiplier = 0.0003;
+var particleSize = 100;
+
+function init() {
+
+  if (!Detector.webgl) {
+    Detector.addGetWebGLMessage();
+    return;
+  }
+
+var container = document.getElementById('map-div');
+
+var map = new google.maps.Map(container, {
+  zoom: 13,
+  mapTypeControl: false,
+  center: new google.maps.LatLng(40.7368273,-73.9822394),
+  mapTypeId: google.maps.MapTypeId.ROADMAP,
+  styles: styles
+});
+
+//Load wifi data using specified decimal accuracy level
+$.ajax({
+    url: "http://capstone.cloudapp.net/wifipulling/?decimal=4",
+    dataType:"text",
+    success: function(data) {
+      var rects = [];
+
+      //Load JSON data and create array of lat/lng pairs called rects
+      json = $.parseJSON(data);
+      _.each(json,function(obj){
+        rects.push(obj);
+      });
+      //Create WEB GL layer using array of points just loaded
+      createLayer(map,rects);
+   }
+   
+  });
+
+}
+
+//Create particle geometry using wifi data
+function createLayer(map,rects){
+
+new ThreejsLayer({ map: map }, function(layer){
+
+  var geometry = new THREE.Geometry(),
+  texture = new THREE.Texture(generateSprite()), material, particles;
+
+  rects.forEach(function(point){
+    var location = new google.maps.LatLng(point[0], point[1]),
+    vertex = layer.fromLatLngToVertex(location);
+    geometry.vertices.push( vertex );
+  });
+
+  texture.needsUpdate = true;
+
+      // values that are constant for all particles during a draw call
+      var customUniforms = 
+      {
+        texture: { type: "t", value: texture},
+      };
+
+  // properties that may vary from particle to particle. only accessible in vertex shaders!
+  //  (can pass color info to fragment shader via vColor.)
+  var customAttributes = 
+  {
+    customColor:   { type: "c", value: [] },
+    customOpacity: { type: 'f', value: [] },
+    customSize: { type: 'f', value: [] },
+  };
+
+  // assign values to attributes, one for each vertex of the geometry
+  for( var v = 0; v < geometry.vertices.length; v++ ) 
+  {
+    customAttributes.customColor.value[v] = new THREE.Color( 0x1ab517);
+    customAttributes.customOpacity.value[v] = 1.0;
+    customAttributes.customSize.value[v] = particleSize;
+  }
+
+  var material = new THREE.ShaderMaterial({
+    uniforms:     customUniforms,
+    attributes:   customAttributes,
+    vertexShader:   document.getElementById( 'vertexshader' ).textContent,
+    fragmentShader: document.getElementById( 'fragmentshader' ).textContent,
+    transparent: true
+  });
+
+  particles = new THREE.ParticleSystem(geometry,material);
+
+
+  //Add array of points to map as overlay
+  layer.add(particles);
+
+  //Set up initial point scale value based on current map zoom level
+  scaleVal = scaleMultiplier * Math.pow(2,map.getZoom());
+
+  //Update size of points on load
+  dynamicUpdate(layer,geometry,customAttributes);
+
+  //Add listener to update point sizes on map zoom change
+  google.maps.event.addListener(map, 'zoom_changed', function() {
+    var zoomLevel = map.getZoom();
+    scaleVal = scaleMultiplier * Math.pow(2,zoomLevel);
+    dynamicUpdate(layer,geometry,customAttributes);
+});
+
+
+});
+
+}
+
+//Update point attributes
+function dynamicUpdate(layer,geometry,customAttributes) {
+
+  for( var v = 0; v < geometry.vertices.length; v++ ) 
+  {
+    //customAttributes.customColor.value[v] = new THREE.Color(0xffffff * Math.random());
+    customAttributes.customOpacity.value[v] = 1.0;
+    //customAttributes.customSize.value[v] = Math.random()*scaleVal;
+    customAttributes.customSize.value[v] = scaleVal;
+  }
+  
+  customAttributes.customSize.needsUpdate = true;
+  customAttributes.customColor.needsUpdate = true;
+  customAttributes.customOpacity.needsUpdate = true;
+
+  layer.render();
+
+}
+
+function generateSprite() {
+
+  var canvas = document.createElement('canvas'),
+  context = canvas.getContext('2d'),
+  gradient;
+
+  canvas.width = particleSize;
+  canvas.height = particleSize;
+
+  gradient = context.createRadialGradient(
+    canvas.width / 2, canvas.height / 2, 0,
+    canvas.width / 2, canvas.height / 2, canvas.width / 2
+    );
+
+  gradient.addColorStop(1.0, 'rgba(255,255,255,0)');
+  gradient.addColorStop(0.0, 'rgba(255,255,255,1)');
+
+  context.fillStyle = gradient;
+  context.fillRect(0, 0, canvas.width, canvas.height);
+
+  return canvas;
+}
+
+document.addEventListener('DOMContentLoaded', init, false);
+</script>
+
+</head>
+
+<body>
+  <div id="map-div"></div>
+</body>
+</html>

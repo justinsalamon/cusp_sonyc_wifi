@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Data Coverage</title>
+    <style>
+  
+      html, body, #map-canvas {
+        height: 100%;
+        margin: 0px;
+        padding-top: 0px
+      }
+ 
+      #form{
+        position: absolute;
+        top: 0px;
+        left: 50%;
+        margin-left: 380px;
+        margin-top:115px;
+        z-index: 5;
+        background-color:white;
+        padding:10px;
+        border: 3px solid #999;
+        opacity:0.7;
+      }
+    </style>
+    <script type="text/javascript"
+      src="https://maps.googleapis.com/maps/api/js?libraries=visualization&sensor=true"></script><!--visualization lib-->
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><!-- jquery lib-->
+
+    <script type="text/javascript" src="underscore.js"></script>
+    <script type = "text/javascript" src = "markerclusterer.js"></script>
+    <script>
+
+// Adding 500 Data Points
+var map, heatmap,pointdata,pointArray;
+function initialize(){
+  var mapOptions = {
+      zoom :11,
+      center: new google.maps.LatLng(40.7307, -73.996094),
+      mapTypeId: google.maps.MapTypeId.ROADMAP
+    } //mapoption ending 
+
+    map = new google.maps.Map(document.getElementById('map-canvas'),
+      mapOptions);
+
+}
+function removeDuplicated(arr){
+
+  var n, y, x, i, r;
+
+
+  var arrResult = {},
+  nonDuplicatedArray = [];
+  for (i = 0, n = arr.length; i < n; i++) {
+      var item = arr[i];
+      arrResult[item.lat + " - " + item.lng] = item;
+  }
+  i = 0;
+  for (var item in arrResult) {
+    nonDuplicatedArray[i++] = arrResult[item];
+  }
+ 
+  return nonDuplicatedArray
+}
+
+function showdata(){
+  $.ajax({
+    url: "http://capstone.cloudapp.net/wifipulling/?columns=lat|lng&distinct=1",
+    dataType:"text",
+
+    success: function(data) { //when load data is success, the function will be execuated
+      rects = [];
+      resolution = 4;
+      latlng = []
+      eps = 0.00005;
+      
+      json = $.parseJSON(data);
+      _.each(json,function(obj){
+        mylat = parseFloat((obj.lat).toFixed(4))
+        mylng = parseFloat((obj.lng).toFixed(4))//truncate lat|lng data
+        mylatlng = {'lat':mylat,'lng':mylng};
+        latlng.push(mylatlng)
+      });
+    latlng2 = removeDuplicated(latlng)//remove duplicated lat|lng after truncating 
+    _.each(latlng2,function(obj){
+      lat_SW = obj.lat - eps,
+      lng_SW = obj.lng - eps,
+      lat_NE = obj.lat + eps,
+      lng_NE = obj.lng + eps,
+      rectangle = new google.maps.Rectangle({
+        map:map,
+        fillColor:'red',
+        fillOpacity:0.5,
+        strokeOpacity:0.1,
+        strokeColor:'yellow',
+        bounds: new google.maps.LatLngBounds(
+          new google.maps.LatLng(lat_SW,lng_SW),
+          new google.maps.LatLng(lat_NE,lng_NE))
+        });
+        rects.push(rectangle);
+
+      });//rectangle function
+   }//success function ending
+
+  });//ajax ending 
+
+}//show maps function ending 
+
+google.maps.event.addDomListener(window, 'load', initialize);
+
+showdata()//directly show data as load document
+
+
+
+
+
+</script>
+ 
+
+  </head>
+
+  <body>
+    <div id = "form">
+    <p>NYC Sonic Wifi</p>
+    </div>
+    <div id="map-canvas"></div>
+  </body>
+</html>

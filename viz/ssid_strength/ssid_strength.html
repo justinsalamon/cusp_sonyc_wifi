@@ -29,6 +29,7 @@
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><!-- jquery lib-->
 
     <script type="text/javascript" src="underscore.js"></script>
+    <script type="text/javascript" src = "convertcolor.js"></script>
     <script>
 
 // Adding 500 Data Points
@@ -62,6 +63,7 @@ function initialize(){
 //   }
  
 //   return nonDuplicatedArray//this array only contains lat|lng attribute 
+
 // }
 
 function showssid(){
@@ -76,6 +78,7 @@ function showssid(){
       resolution = 4;
       latlng = []
       showdata=[];
+      colorlist = [];
       eps = 0.00005;
 
       
@@ -127,19 +130,32 @@ function showssid(){
 
   }
   changemap()
- 
+    showdata = _.sortBy(showdata,function(obj){return obj.level});//sorted by level
     _.each(showdata,function(obj){
+      h = get_h(obj.level,-100,0);
+      rgb = HSVtoRGB(h/360.0,1.0,1.0)
+      color = rgbToHex(rgb['g'],rgb['r'],rgb['b']);
+      colorlist.push(color);
+    })//create colorlist for rectangles
+    
+    a = colorlist.length;//use index to 
+    _.each(showdata,function(obj){
+      a += -1;
       lat_SW = obj.lat - eps,
       lng_SW = obj.lng - eps,
       lat_NE = obj.lat + eps,
       lng_NE = obj.lng + eps,
       opacity = (obj.level+100)/100;
+      // h = get_h(obj.level,-100,0);
+      // rgb = HSVtoRGB(h/360.0,1.0,1.0);
+      // color = rgbToHex(rgb['r'],rgb['g'],rgb['b']);
+      // op = (120-h)/120;
       rectangle = new google.maps.Rectangle({
         map:map,
-        fillColor:'red',
-        fillOpacity:opacity,
-        strokeOpacity:opacity,
-        strokeColor:'yellow',
+        fillColor:colorlist[a],
+        fillOpacity:0.8,
+        strokeOpacity:0,
+        strokeColor:colorlist[a],
         clickable:true,
         bounds: new google.maps.LatLngBounds(
           new google.maps.LatLng(lat_SW,lng_SW),

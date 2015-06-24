@@ -623,7 +623,7 @@ public class MainActivity extends Activity {
 						//						Log.e("doInBackground", "Writing failed");
 						//					}
 						Log.i("doInBackground", "about to try to send up!");
-						int TIMEOUT_MILLISEC = 30000; // = 30 seconds
+						int TIMEOUT_MILLISEC = 60000; // = 60 seconds
 						HttpParams httpParams = new BasicHttpParams();
 						HttpConnectionParams.setConnectionTimeout(httpParams, TIMEOUT_MILLISEC);
 						HttpConnectionParams.setSoTimeout(httpParams, TIMEOUT_MILLISEC);

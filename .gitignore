@@ -6,3 +6,11 @@ app/SonycWifii/bin/*
 =======
 .DS_Store
 >>>>>>> 2ca2795fc57a371f94568b5e20685a44eaa76442
+.idea/.name
+.idea/cusp_sonyc_wifi.iml
+.idea/encodings.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/vcs.xml
+.idea/workspace.xml
+.idea/scopes/scope_settings.xml

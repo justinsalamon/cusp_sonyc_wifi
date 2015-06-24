@@ -1,6 +1,6 @@
 function get_h(level, minval,maxval){
-	m = parseFloat((level-minval)/(maxval-minval))*120;
-    h = 120-m;
+	h = parseFloat((level-minval)/(maxval-minval))*120;
+    // h = 120-m;
 	return h;
 }
 
@@ -23,9 +23,9 @@ function HSVtoRGB(h, s, v) {
         case 5: r = v, g = p, b = q; break;
     }
     return {
-        r: Math.floor(r * 255),
-        g: Math.floor(g * 255),
-        b: Math.floor(b * 255)
+        r: Math.min(Math.floor(r * 255), 255),
+        g: Math.min(Math.floor(g * 255),255),
+        b: Math.min(Math.floor(b * 255),255),
     };
 }
 

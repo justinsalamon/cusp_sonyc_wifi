@@ -19,6 +19,7 @@
   <script src="threejs-layer.js"></script>
   <script src="styles.js"></script>
   <script src="http://underscorejs.org/underscore-min.js"></script>
+  <script src="http://malsup.github.io/jquery.blockUI.js"></script>
 
   <script type="x-shader/x-vertex" id="vertexshader">
   attribute float customSize;
@@ -58,6 +59,21 @@ var scaleVal = 1;
 var scaleMultiplier = 0.0003;
 var particleSize = 100;
 
+$(document).ready(function() { 
+  $.blockUI({ message: "<h1>Loading data...</h1>",
+              fadeOut:  4000, 
+              css: {
+                border: 'none', 
+                padding: '15px', 
+                backgroundColor: '#000', 
+                '-webkit-border-radius': '10px', 
+                '-moz-border-radius': '10px', 
+                opacity: .5, 
+                color: '#fff'
+                }
+              });
+});
+
 function init() {
 
   if (!Detector.webgl) {
@@ -89,6 +105,7 @@ $.ajax({
       });
       //Create WEB GL layer using array of points just loaded
       createLayer(map,rects);
+      $.unblockUI();
    }
    
   });

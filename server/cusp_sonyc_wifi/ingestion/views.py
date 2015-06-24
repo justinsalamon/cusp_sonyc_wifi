@@ -35,19 +35,25 @@ def populate(info):
           return "Empty JSON uploaded!!!"
       for i in range(0, len(scan[mainkey])):
           single = []
-          for key in scan[mainkey][i]:
-              if isinstance(scan[mainkey][i][key],list):
-                  readings = []
-                  for j in range(0,len(scan[mainkey][i][key])):
-                      items = []
-                      for readkey in scan[mainkey][i][key][j]:
-                          items.append((readkey,scan[mainkey][i][key][j][readkey]))
-                          #print readkey, scan[mainkey][i][key][j][readkey]
-                      readings.append(items)
-              else:
-                  single.append((key, scan[mainkey][i][key]))
-                  #print key, scan[mainkey][i][key]
+          readings = []
+          try:
+              for key in scan[mainkey][i]:
+                  if isinstance(scan[mainkey][i][key],list):
+                      # readings = []
+                      for j in range(0,len(scan[mainkey][i][key])):
+                          items = []
+                          for readkey in scan[mainkey][i][key][j]:
+                              items.append((readkey,scan[mainkey][i][key][j][readkey]))
+                              #print readkey, scan[mainkey][i][key][j][readkey]
+                          readings.append(items)
+                  else:
+                      single.append((key, scan[mainkey][i][key]))
+                      #print key, scan[mainkey][i][key]
+          except(TypeError):
+              pass
+
           final = []
+
           for k in range(0, len(readings)):
               #subfinal = []
               subfinal = {}
@@ -72,6 +78,7 @@ def populate(info):
                   #subfinal.append((tup2[0],tup2[1]))
                   #print str(tup2[0]) + ": " + str(tup2[1])
               final.append(subfinal)
+
           for ap in final:
               list_results.append(WifiScan(**ap))
   try:

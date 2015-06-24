@@ -26,7 +26,7 @@ function HSVtoRGB(h, s, v) {
         r: Math.min(Math.floor(r * 255), 255),
         g: Math.min(Math.floor(g * 255),255),
         b: Math.min(Math.floor(b * 255),255),
-    };
+    };//keep the color in RGB range!
 }
 
 function componentToHex(c) {

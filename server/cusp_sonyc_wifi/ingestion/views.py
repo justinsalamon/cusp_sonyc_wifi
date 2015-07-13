@@ -11,78 +11,137 @@ def index(request):
         if (len(request.body) <= 0):
             return HttpResponse("No Payload Received")
         response = populate(request.body)
-    # return HttpResponse("ingestion says hello!")
         return HttpResponse(response)
     else:
         return HttpResponse("Hello!")
 
 
 def populate(info):
-  #f = open('C:\Users\Nick\Documents\sonyc_wifi\server\sonyc_ingestion_project\b.txt', 'r')
-  #j = f.read()
-  #f.close()
-  #scan = json.loads(f.read())
-  try:
-    info = unicode(info, errors='ignore')
-    scan = json.loads(info)
-  except:
-    return "Invalid JSON"
+    """ parses the JSON payload from the Android application and inserts it
+    into the database one access point per record.
+    Params: request body from application
+    Returns: "1" if successful upload, error message otherwise. """
 
-  #len(scan[mainkey])
-  list_results = []
-  for mainkey in scan:
-      if (len(scan[mainkey]) < 1):
-          return "Empty JSON uploaded!!!"
-      for i in range(0, len(scan[mainkey])):
-          single = []
-          readings = []
-          try:
-              for key in scan[mainkey][i]:
-                  if isinstance(scan[mainkey][i][key],list):
-                      # readings = []
-                      for j in range(0,len(scan[mainkey][i][key])):
-                          items = []
-                          for readkey in scan[mainkey][i][key][j]:
-                              items.append((readkey,scan[mainkey][i][key][j][readkey]))
-                              #print readkey, scan[mainkey][i][key][j][readkey]
-                          readings.append(items)
-                  else:
-                      single.append((key, scan[mainkey][i][key]))
-                      #print key, scan[mainkey][i][key]
-          except(TypeError):
-              pass
+    # convert everything to unicode before loading it as json
+    # to avoid odd characters and load in json format. if error
+    # with this process, send error message to application.
+    try:
+        info = unicode(info, errors='ignore')
+        scan = json.loads(info)
+    except:
+        return "Invalid JSON"
 
-          final = []
+    access_points = list()
+    
+    # there should be only one main key in scan ("scans")
+    for mainkey in scan:
+ 
+        # check that the scan array contains information and send error
+	# and send error message if it does not
+        if (len(scan[mainkey]) < 1):
+            return "Empty JSON uploaded!!!"
 
-          for k in range(0, len(readings)):
-              #subfinal = []
-              subfinal = {}
-              for tup in readings[k]:
-                  a = tup[0]
-                  b = tup[1]
-                  if isinstance(tup[0], basestring):
-                      a = str(tup[0]).lower()
-                  if isinstance(tup[1], basestring):
-                      b = str(tup[1]).lower()
-                  subfinal[a] = b
-                  #subfinal.append((tup[0], tup[1]))
-                  #print str(tup[0]) + ": " + str(tup[1])
-              for tup2 in single:
-                  a = tup2[0]
-                  b = tup2[1]
-                  if isinstance(tup2[0], basestring):
-                      a = str(tup2[0])
-                  if isinstance(tup2[1], basestring):
-                      b = str(tup2[1])
-                  subfinal[a] = b
-                  #subfinal.append((tup2[0],tup2[1]))
-                  #print str(tup2[0]) + ": " + str(tup2[1])
-              final.append(subfinal)
+	# iterate through every dictionary in the scan array
+        for i in range(0, len(scan[mainkey])):
 
-          for ap in final:
-              list_results.append(WifiScan(**ap))
-  try:
-    WifiScan.objects.bulk_create(list_results)
-    return "1"
-  except:
-    return "Error Adding Entries to Database!"
+	    # empty lists to hold the dictionary elements with single values
+	    # and multiple values (in the case of the scan readings)
+            single = list()
+            readings = list()
+
+	    # to circumvent type errors
+            try:
+		
+		# iterate through each key in the current dictionary
+                for key in scan[mainkey][i]:
+
+		    # check if the value of the key is a list (only readings
+		    # will be a list)
+                    if isinstance(scan[mainkey][i][key],list):
+                        
+			# if a list, iterate through the list
+                        for j in range(0,len(scan[mainkey][i][key])):
+                            items = list()
+
+			    # as each list element is a dictionary, iterate
+			    # through keys in dictonary and add a tuple
+			    # containing the key and value pair to the items array
+                            for readkey in scan[mainkey][i][key][j]:
+                                items.append((readkey,scan[mainkey][i][key][j][readkey]))
+
+			    # before moving to the next dictionary in the list,
+			    # add the items to the readings list
+                            readings.append(items)
+
+		    # if not a list, add a tuple of the key/value pair to the
+		    # list for single elements (these include things like time
+		    # and location as they are the same for multiple access
+		    # points
+                    else:
+                        single.append((key, scan[mainkey][i][key]))
+
+	    # if a TypeError is present, move on
+            except(TypeError):
+                pass
+
+	    # list to hold the final set of dictionaries
+            final_dicts = list()
+
+	    # iterate through every element of the readings list
+            for k in range(0, len(readings)):
+		
+		# a dictionary of the measurements
+                measurement_dict = dict()
+
+		# iterate through each tuple in the current reading
+                for read_measure in readings[k]:
+
+		    # default to the key being the first element of the tuple
+		    # and the value being the second
+                    measurement_key = read_measure[0]
+                    measurement_value = read_measure[1]
+
+		    # if the elements of the tuple are String Objects,
+		    # change them to string types (instead of unicode) and lowercase
+                    if isinstance(read_measure[0], basestring):
+                        measurement_key = str(read_measure[0]).lower()
+                    if isinstance(read_measure[1], basestring):
+                        measurement_value = str(read_measure[1]).lower()
+
+		    # add the key value pair to the measurement dictionary
+                    measurement_dict[measurement_key] = measurement_value
+
+		# iterate through the elements of the single measurements
+		# and do the same as above
+                for single_measure in single:
+
+                    single_key = single_measure[0]
+                    single_value = single_measure[1]
+
+                    if isinstance(single_measure[0], basestring):
+                        single_key = str(single_measure[0])
+                    if isinstance(single_measure[1], basestring):
+                        single_value = str(single_measure[1])
+
+                    measurement_dict[single_key] = single_value
+
+		# add the entire dictionary to the final list
+                final_dicts.append(measurement_dict)
+
+	    # iterate through each element of final_dicts
+            for access_point in final_dicts:
+
+		# add a WifiScan class insertion for each access point
+		# in the final_dicts list to the access_points list.
+		# See Models for WiFiScan class
+                access_points.append(WifiScan(**access_point))
+
+    # try to bulk create all of the WiFiScan model insertions in one database
+    # connection and return "1" to Android application if successful
+    try:
+        WifiScan.objects.bulk_create(access_points)
+        return "1"
+
+    # if there is an error creating new entries, send error to application
+    except:
+        return "Error Adding Entries to Database!"

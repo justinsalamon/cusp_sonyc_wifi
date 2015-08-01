@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>WIFI Strength For SSID</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <script type="text/javascript"
+      src="https://maps.googleapis.com/maps/api/js?libraries=visualization&sensor=true"></script><!--visualization lib-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><!-- jquery lib-->
+    <script type="text/javascript" src="underscore.js"></script>
+    <script type="text/javascript" src = "convertcolor.js"></script>
+    <script type="text/javascript" src="convex_hull.js"></script>
+    <script type="text/javascript" src="label.js"></script>
+    <script type="text/javascript" src="map.js"></script>
+</head>
+  <body>
+    <div id = "form">
+    <p>NYC Sonic Wifi</p>
+    <p>Capabilties:<input type = 'text' name = 'caps' id = 'caps'></p>
+    <p>Batch Size:<input type = 'text' name = 'batch' id = 'batch' value="100000"></p>
+	<p>Offset:<input type = 'text' name = 'offset' id = 'offset' value="100000"></p>
+	<hr>
+	<p id="ssids" style="font-weight: bold"></p>
+    <button onclick = "showcaps()">Confirm</button>
+    <button onclick = 'initialize()'>Clear</button>
+    </div>
+    <div id="map-canvas"></div>
+  </body>
+</html>
